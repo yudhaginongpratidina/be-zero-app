@@ -1,0 +1,37 @@
+@startuml
+
+title Account Activity Diagram
+
+start
+
+:Find Account by Code;
+if (Account exists?) then (yes)
+    :Return account data;
+else (no)
+    :Throw "Account not found" error;
+endif
+
+:Update Account;
+if (Account exists?) then (yes)
+    :Validate request data;
+    if (Password present?) then (yes)
+        :Hash password;
+    endif
+    :Update account data;
+    :Return updated account data;
+else (no)
+    :Throw "Account not found" error;
+endif
+
+:Soft Delete Account;
+if (Account exists?) then (yes)
+    :Mark account as deleted;
+    :Clear refresh token cookie;
+    :Return success message;
+else (no)
+    :Throw "Account not found" error;
+endif
+
+stop
+
+@enduml

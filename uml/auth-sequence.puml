@@ -1,0 +1,78 @@
+@startuml
+actor User
+participant "AuthController" as AC
+participant "AuthService" as AS
+participant "AuthRepository" as AR
+participant "Validation" as V
+participant "bcrypt" as B
+participant "jwt" as J
+participant "Database" as DB
+
+== Registration ==
+User -> AC: POST /auth/register
+AC -> V: validate(registerValidation, req.body)
+V --> AC: validated data
+AC -> AS: register(data)
+AS -> AR: findUsername(username)
+AR -> DB: query by username
+DB --> AR: result
+AR --> AS: result
+AS -> AR: findEmail(email)
+AR -> DB: query by email
+DB --> AR: result
+AR --> AS: result
+AS -> B: hash(password, 10)
+B --> AS: hashed password
+AS -> AR: len()
+AR -> DB: count users
+DB --> AR: count
+AR --> AS: count
+AS -> AR: register(userData)
+AR -> DB: insert user
+DB --> AR: user
+AR --> AS: user
+AS --> AC: user
+AC --> User: 201 User created successfully
+
+== Login ==
+User -> AC: POST /auth/login
+AC -> V: validate(loginValidation, req.body)
+V --> AC: validated data
+alt login with email
+    AC -> AS: loginWithEmail(data)
+    AS -> AR: loginWithEmail(email)
+    AR -> DB: query by email
+    DB --> AR: user
+    AR --> AS: user
+    AS -> B: compare(password, user.password)
+    B --> AS: result
+    AS --> AC: user
+else login with username
+    AC -> AS: loginWithUsername(data)
+    AS -> AR: loginWithUsername(username)
+    AR -> DB: query by username
+    DB --> AR: user
+    AR --> AS: user
+    AS -> B: compare(password, user.password)
+    B --> AS: result
+    AS --> AC: user
+end
+AC -> J: sign({ code, role }, JWT_ACCESS_TOKEN_SECRET)
+J --> AC: access_token
+AC -> J: sign({ code, role }, JWT_REFRESH_TOKEN_SECRET)
+J --> AC: refresh_token
+AC --> User: 200 User logged in successfully
+
+== Token Refresh ==
+User -> AC: GET /auth/token
+AC -> J: verify(refresh_token, JWT_REFRESH_TOKEN_SECRET)
+J --> AC: decoded token
+AC -> J: sign({ code, role }, JWT_ACCESS_TOKEN_SECRET)
+J --> AC: new access_token
+AC --> User: 200 Token refreshed successfully
+
+== Logout ==
+User -> AC: GET /auth/logout
+AC --> User: 200 User logged out successfully
+
+@enduml

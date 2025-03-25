@@ -1,0 +1,47 @@
+@startuml
+
+actor User
+participant "API" as API
+participant "AccountController" as Controller
+participant "AccountService" as Service
+participant "AccountRepository" as Repository
+
+User -> API: GET /account/:code
+API -> Controller: findCode(req, res, next)
+Controller -> Service: findCode(req.params.code)
+Service -> Repository: findCode(code)
+Repository -> Service: return account
+Service -> Controller: return account
+Controller -> API: res.status(200).json({ message: "Account found successfully", data: response })
+API -> User: return account data
+
+User -> API: PATCH /account/:code
+API -> Controller: update(req, res, next)
+Controller -> Validation: validate(accountUpdateValidation, req.body)
+Validation -> Controller: return validated data
+alt password present
+    Controller -> bcrypt: hash(data.password, 10)
+    bcrypt -> Controller: return hashed password
+end
+Controller -> Service: update(req.params.code, data)
+Service -> Repository: update(code, data)
+Repository -> Service: return updated account
+Service -> Controller: return updated account
+Controller -> API: res.status(200).json({ message: "Account updated successfully", data: response })
+API -> User: return updated account data
+
+User -> API: DELETE /account/:code
+API -> Controller: softDelete(req, res, next)
+alt refresh token present
+    Controller -> Service: softDelete(req.params.code)
+    Service -> Repository: softDelete(code)
+    Repository -> Service: return result
+    Service -> Controller: return result
+    Controller -> API: res.clearCookie('refresh_token', { maxAge: 0 })
+    Controller -> API: res.status(200).json({ message: "Account deleted successfully", data: response })
+else
+    Controller -> API: res.status(200).json({ message: "account is deleted" })
+end
+API -> User: return delete result
+
+@enduml

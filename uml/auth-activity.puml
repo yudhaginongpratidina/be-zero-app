@@ -1,0 +1,57 @@
+@startuml auth-activity
+
+|User|
+start
+:Send registration request;
+|AuthController|
+:Validate registration data;
+:Call AuthService.register;
+|AuthService|
+:Check if username exists;
+:Check if email exists;
+:Hash password;
+:Generate user identifier;
+:Save user to database;
+|AuthRepository|
+:Create user record;
+|AuthService|
+:Return user data;
+|AuthController|
+:Send success response;
+stop
+
+|User|
+start
+:Send login request;
+|AuthController|
+:Validate login data;
+:Call AuthService.loginWithEmail or AuthService.loginWithUsername;
+|AuthService|
+:Find user by email or username;
+:Check if password is valid;
+:Check if user is deleted;
+:Generate access and refresh tokens;
+|AuthController|
+:Set refresh token cookie;
+:Send success response with access token;
+stop
+
+|User|
+start
+:Send refresh token request;
+|AuthController|
+:Get refresh token from cookies;
+:Verify refresh token;
+:Generate new access token;
+:Send success response with new access token;
+stop
+
+|User|
+start
+:Send logout request;
+|AuthController|
+:Clear refresh token cookie;
+:Send success response;
+stop
+
+@enduml
