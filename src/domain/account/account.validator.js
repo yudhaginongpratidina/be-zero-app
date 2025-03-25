@@ -1,7 +1,11 @@
-// import
 import { z } from "zod";
 
-// update validation
+// Define validation schema for account update
+// This schema validates the following fields:
+// - firstName: Optional, must be a string containing only letters, numbers, and spaces, with a length between 2 and 60 characters.
+// - lastName: Optional, must be a string containing only letters, numbers, and spaces, with a maximum length of 60 characters.
+// - password: Optional, must be a string with a length between 6 and 28 characters.
+// - passwordConfirmation: Optional, must be a string with a length between 6 and 28 characters, and must match the password field.
 export const accountUpdateValidation = z.object({
     firstName: z
         .string()
